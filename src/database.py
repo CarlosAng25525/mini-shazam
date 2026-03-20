@@ -81,8 +81,11 @@ class SongDatabase:
         Args:
             directory: Path to a directory containing .wav files
         """
-        # TODO: Implement index_directory
-        raise NotImplementedError("Implement index_directory()")
+        files = os.listdir(self, directory)
+        sorted_files = sorted(files)
+        for file in sorted_files:
+            if file.lower().endswith('.wav'):
+                self.index_song(os.path.join(directory, file))
 
     # ------------------------------------------------------------------ #
     # Serialization — YOU IMPLEMENT THESE
@@ -119,8 +122,19 @@ class SongDatabase:
         Args:
             filepath: Where to save the JSON file (e.g., "data/database.json")
         """
-        # TODO: Implement save
-        raise NotImplementedError("Implement save()")
+        entries = []
+        for bucket in self.table._buckets:
+            for key, (song_id, time_offset) in bucket:
+                entries.append([int(key), int(song_id), int(time_offset)])
+        data = {
+            "song_names": {str(k): v for k, v in self.song_names.items()},
+            "next_id": self._next_id,
+            "capacity": self.table._capacity,
+            "entries": entries
+        }
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        with open(filepath, 'w') as f:
+            json.dump(data, f)
 
     @classmethod
     def load(cls, filepath):
